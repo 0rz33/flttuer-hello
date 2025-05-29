@@ -25,6 +25,8 @@ class WebViewExample extends StatefulWidget {
 
 class _WebViewExampleState extends State<WebViewExample> {
   late final WebViewController _controller;
+  Offset _initialSwipeOffset = Offset.zero;
+  Offset _finalSwipeOffset = Offset.zero;
 
   @override
   void initState() {
@@ -34,12 +36,33 @@ class _WebViewExampleState extends State<WebViewExample> {
       ..loadRequest(Uri.parse('https://flutter.dev'));
   }
 
+  Future<void> _handleSwipeBack() async {
+      if (await _controller.canGoBack()) {
+        await _controller.goBack();
+      }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('WebView Demo')),
-      body: WebViewWidget(controller: _controller),
-    );
+      return Scaffold(
+        appBar: AppBar(title: const Text('WebView Demo')),
+        body: GestureDetector(
+          onHorizontalDragStart: (details) {
+            _initialSwipeOffset = details.globalPosition;
+          },
+          onHorizontalDragUpdate: (details) {
+            _finalSwipeOffset = details.globalPosition;
+          },
+          onHorizontalDragEnd: (details) {
+            final dx = _finalSwipeOffset.dx - _initialSwipeOffset.dx;
+            if (dx > 50) {
+              // 右滑动作
+              _handleSwipeBack();
+            }
+          },
+          child: WebViewWidget(controller: _controller),
+        ),
+      );
   }
 }
 
